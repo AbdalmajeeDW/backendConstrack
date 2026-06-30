@@ -73,7 +73,7 @@ export class TenantAuthService {
       'refresh_secret_key_tenant';
 
     const accessExpiresIn: string | number =
-      process.env.JWT_ACCESS_EXPIRES_IN_TENANT || '15m';
+      process.env.JWT_ACCESS_EXPIRES_IN_TENANT || '30d';
     const refreshExpiresIn: string | number =
       process.env.JWT_REFRESH_EXPIRES_IN_TENANT || '30d';
 
