@@ -25,6 +25,11 @@ export class TasksController {
     return this.tasksService.getAllTasks(req.user.tenantId);
   }
 
+  @Get('employee/:employeeId')
+  getByEmployee(@Request() req: any, @Param('employeeId', ParseIntPipe) employeeId: number) {
+    return this.tasksService.getTasksByEmployee(req.user.tenantId, employeeId);
+  }
+
   @Get(':id')
   findOne(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
     

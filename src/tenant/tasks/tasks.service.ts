@@ -145,6 +145,25 @@ async getAllTasks(tenantId: string) {
   }
 }
 
+  async getTasksByEmployee(tenantId: string, employeeId: number) {
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
+    const tenantConnection = await this.createTenantConnection(databaseName);
+
+    try {
+      const tasks = await tenantConnection.query(
+        `SELECT t.*
+         FROM tasks t
+         INNER JOIN task_employees te ON t.id = te.task_id
+         WHERE te.employee_id = ? AND t.is_active = true
+         ORDER BY t.created_at DESC`,
+        [employeeId],
+      );
+
+      return tasks;
+    } finally {
+      await tenantConnection.destroy();
+    }
+  }
 
   async getTaskById(tenantName: string, taskId: number) {
     const databaseName = await this.getTenantDatabaseName(tenantName);
