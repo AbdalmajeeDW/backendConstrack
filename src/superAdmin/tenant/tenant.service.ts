@@ -251,10 +251,10 @@ export class TenantService {
     }
   }
 
- private async createTenantEmployeeTable(databaseName: string) {
-  try {
-    await this.dataSource.query(
-      `CREATE TABLE \`${databaseName}\`.\`employees\` (
+  private async createTenantEmployeeTable(databaseName: string) {
+    try {
+      await this.dataSource.query(
+        `CREATE TABLE \`${databaseName}\`.\`employees\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL UNIQUE,
@@ -270,17 +270,17 @@ export class TenantService {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-    );
-  } catch (error) {
-    throw new InternalServerErrorException(
-      'Failed to create tenant employee table',
-    );
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create tenant employee table',
+      );
+    }
   }
-}
-private async createTaskEmployeesTable(databaseName: string) {
-  try {
-    await this.dataSource.query(
-      `CREATE TABLE \`${databaseName}\`.\`task_employees\` (
+  private async createTaskEmployeesTable(databaseName: string) {
+    try {
+      await this.dataSource.query(
+        `CREATE TABLE \`${databaseName}\`.\`task_employees\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         task_id INT NOT NULL,
         employee_id INT NOT NULL,
@@ -289,23 +289,24 @@ private async createTaskEmployeesTable(databaseName: string) {
         FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
         UNIQUE KEY unique_task_employee (task_id, employee_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-    );
-  } catch (error) {
-    throw new InternalServerErrorException(
-      'Failed to create task_employees table',
-    );
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create task_employees table',
+      );
+    }
   }
-}
 
-private async createTenantTasksTable(databaseName: string) {
-  try {
-    await this.dataSource.query(
-      `CREATE TABLE IF NOT EXISTS \`${databaseName}\`.\`tasks\` (
+  private async createTenantTasksTable(databaseName: string) {
+    try {
+      await this.dataSource.query(
+        `CREATE TABLE IF NOT EXISTS \`${databaseName}\`.\`tasks\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         taskName VARCHAR(255) NOT NULL,
         projectName VARCHAR(255) NOT NULL,
         assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         city VARCHAR(255) NULL,
+        images JSON NULL,
         postal_code VARCHAR(50) NULL,
         house_number VARCHAR(50) NULL,
         worker_arrival_time TIME NULL,
@@ -322,11 +323,13 @@ private async createTenantTasksTable(databaseName: string) {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-    );
-  } catch (error) {
-    throw new InternalServerErrorException('Failed to create tenant tasks table');
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create tenant tasks table',
+      );
+    }
   }
-}
 
   private async createTenantAdminTable(databaseName: string) {
     try {
@@ -398,7 +401,7 @@ private async createTenantTasksTable(databaseName: string) {
       await this.createTenantEmployeeTable(databaseName);
       await this.createTenantAdminTable(databaseName);
       await this.createTenantTasksTable(databaseName);
-          await this.createTaskEmployeesTable(databaseName);  
+      await this.createTaskEmployeesTable(databaseName);
 
       const hashedPassword = await bcrypt.hash(
         createTenantDto.adminPassword,
@@ -421,7 +424,9 @@ private async createTenantTasksTable(databaseName: string) {
         databaseName,
         subscriptionStartDate: createTenantDto.subscriptionStartDate,
         subscriptionEndDate: createTenantDto.subscriptionEndDate,
-        discount: createTenantDto.discount,
+        discount: createTenantDto.discount
+    ? Number(createTenantDto.discount)
+    : undefined,
         industry: createTenantDto.industry,
         maxEmployees: createTenantDto.maxEmployees,
         kvkNumber: createTenantDto.kvkNumber,
@@ -439,102 +444,117 @@ private async createTenantTasksTable(databaseName: string) {
     }
   }
 
+  //async update(id: string, updateTenantDto: UpdateTenantDto) {
+  //  try {
+  //    const [tenant] = await this.dataSource.query(
+  //      `SELECT * FROM tenants WHERE id = ?`,
+  //      [id],
+  //    );
+  //
+  //    if (!tenant) {
+  //      throw new NotFoundException('Tenant not found');
+  //    }
+  //
+  //    if (
+  //      updateTenantDto.adminEmail &&
+  //      updateTenantDto.adminEmail !== tenant.admin_email
+  //    ) {
+  //      const existing = await this.findByAdminEmail(
+  //        updateTenantDto.adminEmail,
+  //      );
+  //      if (existing) {
+  //        throw new ConflictException(
+  //          'A tenant with this admin email already exists',
+  //        );
+  //      }
+  //    }
+  //
+  //    let newDatabaseName = tenant.database_name;
+  //    if (updateTenantDto.name && updateTenantDto.name !== tenant.name) {
+  //      const newDatabaseBase = this.normalizeDatabaseName(
+  //        updateTenantDto.name,
+  //      );
+  //      newDatabaseName = await this.buildUniqueDatabaseName(newDatabaseBase);
+  //      await this.createTenantDatabase(newDatabaseName);
+  //      // Note: You might want to migrate data from old database to new one
+  //    }
+  //
+  //    const hashedPassword = updateTenantDto.adminPassword
+  //      ? await bcrypt.hash(updateTenantDto.adminPassword, 10)
+  //      : tenant.admin_password;
+  //
+  //    const updateQuery = `
+  //      UPDATE tenants SET
+  //        name = ?,
+  //        address = ?,
+  //        phone = ?,
+  //        plan = ?,
+  //        admin_name = ?,
+  //        admin_email = ?,
+  //        admin_password = ?,
+  //        database_name = ?,
+  //        subscription_start_date = ?,
+  //        subscription_end_date = ?,
+  //        discount = ?,
+  //        status = ?,
+  //        industry = ?,
+  //        max_employees = ?,
+  //        kvk_number = ?,
+  //        btw_number = ?,
+  //        updated_at = NOW()
+  //      WHERE id = ?
+  //    `;
+  //
+  //    const values = [
+  //      updateTenantDto.name ?? tenant.name,
+  //      updateTenantDto.address ?? tenant.address,
+  //      updateTenantDto.phone ?? tenant.phone,
+  //      updateTenantDto.adminName ?? tenant.admin_name,
+  //      updateTenantDto.adminEmail ?? tenant.admin_email,
+  //      hashedPassword,
+  //      newDatabaseName,
+  //      updateTenantDto.subscriptionStartDate ?? tenant.subscription_start_date,
+  //      updateTenantDto.subscriptionEndDate ?? tenant.subscription_end_date,
+  //      updateTenantDto.discount ?? tenant.discount,
+  //      updateTenantDto.status ?? tenant.status,
+  //      updateTenantDto.plan ?? tenant.plan,
+  //      updateTenantDto.industry ?? tenant.industry,
+  //      updateTenantDto.maxEmployees ?? tenant.max_employees,
+  //      updateTenantDto.kvkNumber ?? tenant.kvk_number,
+  //      updateTenantDto.btwNumber ?? tenant.btw_number,
+  //      id,
+  //    ];
+  //
+  //    await this.dataSource.query(updateQuery, values);
+  //
+  //    // Fetch and return the updated tenant
+  //    return await this.findOne(id);
+  //  } catch (error) {
+  //    if (
+  //      error instanceof NotFoundException ||
+  //      error instanceof ConflictException
+  //    ) {
+  //      throw error;
+  //    }
+  //    throw new InternalServerErrorException('Failed to update tenant');
+  //  }
+  //}
   async update(id: string, updateTenantDto: UpdateTenantDto) {
     try {
-      const [tenant] = await this.dataSource.query(
-        `SELECT * FROM tenants WHERE id = ?`,
-        [id],
-      );
-
-      if (!tenant) {
-        throw new NotFoundException('Tenant not found');
-      }
-
-      if (
-        updateTenantDto.adminEmail &&
-        updateTenantDto.adminEmail !== tenant.admin_email
-      ) {
-        const existing = await this.findByAdminEmail(
-          updateTenantDto.adminEmail,
+      if (updateTenantDto.adminPassword) {
+        updateTenantDto.adminPassword = await bcrypt.hash(
+          updateTenantDto.adminPassword,
+          10,
         );
-        if (existing) {
-          throw new ConflictException(
-            'A tenant with this admin email already exists',
-          );
-        }
       }
 
-      let newDatabaseName = tenant.database_name;
-      if (updateTenantDto.name && updateTenantDto.name !== tenant.name) {
-        const newDatabaseBase = this.normalizeDatabaseName(
-          updateTenantDto.name,
-        );
-        newDatabaseName = await this.buildUniqueDatabaseName(newDatabaseBase);
-        await this.createTenantDatabase(newDatabaseName);
-        // Note: You might want to migrate data from old database to new one
-      }
+      await this.tenantRepository.update({ id: parseInt(id) }, updateTenantDto);
 
-      const hashedPassword = updateTenantDto.adminPassword
-        ? await bcrypt.hash(updateTenantDto.adminPassword, 10)
-        : tenant.admin_password;
-
-      const updateQuery = `
-        UPDATE tenants SET
-          name = ?,
-          address = ?,
-          phone = ?,
-          plan = ?,
-          admin_name = ?,
-          admin_email = ?,
-          admin_password = ?,
-          database_name = ?,
-          subscription_start_date = ?,
-          subscription_end_date = ?,
-          discount = ?,
-          status = ?,
-          industry = ?,
-          max_employees = ?,
-          kvk_number = ?,
-          btw_number = ?,
-          updated_at = NOW()
-        WHERE id = ?
-      `;
-
-      const values = [
-        updateTenantDto.name ?? tenant.name,
-        updateTenantDto.address ?? tenant.address,
-        updateTenantDto.phone ?? tenant.phone,
-        updateTenantDto.adminName ?? tenant.admin_name,
-        updateTenantDto.adminEmail ?? tenant.admin_email,
-        hashedPassword,
-        newDatabaseName,
-        updateTenantDto.subscriptionStartDate ?? tenant.subscription_start_date,
-        updateTenantDto.subscriptionEndDate ?? tenant.subscription_end_date,
-        updateTenantDto.discount ?? tenant.discount,
-        updateTenantDto.status ?? tenant.status,
-        updateTenantDto.plan ?? tenant.plan,
-        updateTenantDto.industry ?? tenant.industry,
-        updateTenantDto.maxEmployees ?? tenant.max_employees,
-        updateTenantDto.kvkNumber ?? tenant.kvk_number,
-        updateTenantDto.btwNumber ?? tenant.btw_number,
-        id,
-      ];
-
-      await this.dataSource.query(updateQuery, values);
-
-      // Fetch and return the updated tenant
-      return await this.findOne(id);
+      return this.findOne(id);
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ConflictException
-      ) {
-        throw error;
-      }
       throw new InternalServerErrorException('Failed to update tenant');
     }
   }
-
   async deactivate(id: string) {
     try {
       const [tenant] = await this.dataSource.query(

@@ -12,6 +12,11 @@ import { TenantModule } from '../../superAdmin/tenant/tenant.module';
 @Module({
   imports: [PassportModule, JwtModule.register({}), TenantModule],
   controllers: [TenantAuthController],
-  providers: [TenantAuthService, TenantAccessTokenStrategy, TenantRefreshTokenStrategy, TenantJwtAuthGuard],
+  providers: [
+    TenantAuthService,
+    TenantAccessTokenStrategy,
+    TenantRefreshTokenStrategy,
+    TenantJwtAuthGuard,
+  ],
 })
 export class TenantAuthModule {}

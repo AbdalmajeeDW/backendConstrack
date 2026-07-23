@@ -1,52 +1,63 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('tenants')
 export class Tenant {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ name: 'name', type: 'varchar', length: 255,unique: true })
-  name!: string;  
+  @Column({ name: 'name', type: 'varchar', length: 255, unique: true })
+  name!: string;
 
   @Column({ name: 'address', type: 'text', nullable: true })
-  address!: string;  
+  address!: string;
 
   @Column({ name: 'phone', type: 'varchar', length: 50, nullable: true })
-  phone!: string;  
+  phone!: string;
 
   @Column({ name: 'admin_name', type: 'varchar', length: 255 })
-  adminName!: string;  
+  adminName!: string;
 
   @Column({ name: 'admin_password', type: 'varchar', length: 255 })
-  adminPassword!: string;  
+  adminPassword!: string;
 
   @Column({ name: 'admin_email', type: 'varchar', length: 255, unique: true })
-  adminEmail!: string;  
+  adminEmail!: string;
 
   @Column({ name: 'plan', type: 'varchar', length: 255 })
-  plan!: string;  
+  plan!: string;
 
   @Column({ name: 'database_name', type: 'varchar', length: 255, unique: true })
   databaseName!: string;
 
   @Column({ name: 'subscription_start_date', type: 'date' })
-  subscriptionStartDate!: Date;  
+  subscriptionStartDate!: Date;
 
   @Column({ name: 'subscription_end_date', type: 'date' })
-  subscriptionEndDate!: Date;  
-  @Column({ name: 'discount', type: 'decimal', precision: 5, scale: 2, default: 0 })
-  discount!: number;  
+  subscriptionEndDate!: Date;
+ @Column({
+  type: 'decimal',
+  precision: 10,
+  scale: 2,
+  nullable: true,
+})
+discount?: number;
 
   @Column({ name: 'industry', type: 'varchar', length: 100, nullable: true })
-  industry!: string;  
+  industry!: string;
   @Column({ name: 'max_employees', type: 'int', default: 100 })
-  maxEmployees!: number;  
+  maxEmployees!: number;
 
   @Column({ name: 'kvk_number', type: 'varchar', length: 50, nullable: true })
-  kvkNumber!: string;  
+  kvkNumber!: string;
 
   @Column({ name: 'btw_number', type: 'varchar', length: 50, nullable: true })
-  btwNumber!: string;  
+  btwNumber!: string;
 
   @Column({ name: 'status', type: 'varchar', length: 50, default: 'active' })
   status!: string;
@@ -55,7 +66,5 @@ export class Tenant {
   created_at!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updated_at!: Date;  
-
-
+  updated_at!: Date;
 }

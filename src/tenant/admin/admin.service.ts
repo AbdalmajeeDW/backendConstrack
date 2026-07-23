@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -48,7 +53,16 @@ export class AdminService {
     try {
       const adminRepository = tenantConnection.getRepository(TenantAdmin);
       const admins = await adminRepository.find({
-        select: ['id', 'name', 'email', 'phone', 'is_active', 'role', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'phone',
+          'is_active',
+          'role',
+          'created_at',
+          'updated_at',
+        ],
         order: { created_at: 'DESC' },
       });
       return admins;
@@ -65,7 +79,16 @@ export class AdminService {
       const adminRepository = tenantConnection.getRepository(TenantAdmin);
       const admin = await adminRepository.findOne({
         where: { id },
-        select: ['id', 'name', 'email', 'phone', 'is_active', 'role', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'phone',
+          'is_active',
+          'role',
+          'created_at',
+          'updated_at',
+        ],
       });
 
       if (!admin) {
@@ -86,7 +109,16 @@ export class AdminService {
       const adminRepository = tenantConnection.getRepository(TenantAdmin);
       const admin = await adminRepository.findOne({
         where: { email },
-        select: ['id', 'name', 'email', 'phone', 'is_active', 'role', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'phone',
+          'is_active',
+          'role',
+          'created_at',
+          'updated_at',
+        ],
       });
 
       return admin;
@@ -152,13 +184,25 @@ export class AdminService {
 
       // Hash password if being updated
       if (updateAdminDto.password) {
-        updateAdminDto.password = await bcrypt.hash(updateAdminDto.password, 10);
+        updateAdminDto.password = await bcrypt.hash(
+          updateAdminDto.password,
+          10,
+        );
       }
 
       await adminRepository.update(id, updateAdminDto);
       const updatedAdmin = await adminRepository.findOne({
         where: { id },
-        select: ['id', 'name', 'email', 'phone', 'is_active', 'role', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'phone',
+          'is_active',
+          'role',
+          'created_at',
+          'updated_at',
+        ],
       });
 
       return updatedAdmin;

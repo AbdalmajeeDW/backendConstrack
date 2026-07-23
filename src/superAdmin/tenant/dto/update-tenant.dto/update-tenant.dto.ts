@@ -1,4 +1,13 @@
-import { IsString, IsEmail, IsOptional, IsNumber, Min, Max, IsDateString, IsDecimal } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsDateString,
+  IsDecimal,
+} from 'class-validator';
 
 export class UpdateTenantDto {
   @IsOptional()
@@ -16,7 +25,7 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsString()
   adminName?: string;
-    @IsString()
+  @IsString()
   status!: string;
   @IsOptional()
   @IsString()

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto/update-tenant.dto';
@@ -25,7 +33,10 @@ export class TenantController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateTenantDto: UpdateTenantDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateTenantDto: UpdateTenantDto,
+  ) {
     return this.tenantService.update(id, updateTenantDto);
   }
 
@@ -39,4 +50,3 @@ export class TenantController {
     return this.tenantService.activate(id);
   }
 }
-

@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsEmail, IsOptional, IsString, MinLength, IsEnum, IsBoolean, IsDateString, Min, IsNumber } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MinLength,
+  IsEnum,
+  IsBoolean,
+  IsDateString,
+  Min,
+  IsNumber,
+} from 'class-validator';
 
 export class CreateEmployeeDto {
   @IsString()
@@ -19,7 +29,7 @@ export class CreateEmployeeDto {
   @IsOptional()
   @IsEnum(['admin', 'employee'])
   role?: 'admin' | 'employee';
-    @IsOptional()
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)

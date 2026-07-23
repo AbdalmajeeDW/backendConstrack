@@ -1,12 +1,21 @@
 // src/superAdmin/user/user.controller.ts
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto/update-user.dto';
 import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
 
 @Controller('super/users')
-@UseGuards(JwtAuthGuard)  // كل الـ APIs تحتاج توكن صالح
+@UseGuards(JwtAuthGuard) // كل الـ APIs تحتاج توكن صالح
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

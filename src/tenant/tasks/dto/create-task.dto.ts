@@ -1,4 +1,14 @@
-import { IsString, IsOptional, IsEnum, IsArray, IsNumber, IsDecimal, IsDateString, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  IsDecimal,
+  IsDateString,
+  IsIn,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateTaskDto {
   @IsString()
@@ -27,6 +37,7 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsArray()
+  @Type(() => Number)
   employeeIds?: number[];
 
   @IsOptional()
@@ -51,8 +62,12 @@ export class CreateTaskDto {
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   work_area?: number;
-
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
   @IsOptional()
   @IsString()
   bus_number?: string;

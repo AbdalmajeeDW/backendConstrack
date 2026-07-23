@@ -1,9 +1,13 @@
 // src/superAdmin/auth/auth.service.ts
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';  
+import * as bcrypt from 'bcryptjs';
 import { User } from '../user/user.entity';
 import { LoginDto } from './dto/login.dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -28,7 +32,6 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
-
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -161,14 +164,20 @@ export class AuthService {
       process.env.JWT_REFRESH_EXPIRES_IN_SUPERADMIN || '30d';
 
     const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(payload as any, {
-        secret: accessSecret,
-        expiresIn: accessExpiresIn as any,
-      } as any),
-      this.jwtService.signAsync(payload as any, {
-        secret: refreshSecret,
-        expiresIn: refreshExpiresIn as any,
-      } as any),
+      this.jwtService.signAsync(
+        payload as any,
+        {
+          secret: accessSecret,
+          expiresIn: accessExpiresIn as any,
+        } as any,
+      ),
+      this.jwtService.signAsync(
+        payload as any,
+        {
+          secret: refreshSecret,
+          expiresIn: refreshExpiresIn as any,
+        } as any,
+      ),
     ]);
 
     return { access_token, refresh_token };

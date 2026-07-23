@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, InternalServerErrorException, } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -35,7 +41,9 @@ export class TenantAuthService {
   }
 
   private async createTenantConnection(databaseName: string) {
-    const tenantDataSource = new DataSource(this.buildTenantDataSourceOptions(databaseName));
+    const tenantDataSource = new DataSource(
+      this.buildTenantDataSourceOptions(databaseName),
+    );
     await tenantDataSource.initialize();
     return tenantDataSource;
   }
@@ -55,7 +63,6 @@ export class TenantAuthService {
     tenantId: string,
     role: string,
   ) {
-
     const payload: Record<string, any> = {
       sub: id,
       email,
@@ -78,14 +85,20 @@ export class TenantAuthService {
       process.env.JWT_REFRESH_EXPIRES_IN_TENANT || '30d';
 
     const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(payload as any, {
-        secret: accessSecret,
-        expiresIn: accessExpiresIn as any,
-      } as any),
-      this.jwtService.signAsync(payload as any, {
-        secret: refreshSecret,
-        expiresIn: refreshExpiresIn as any,
-      } as any),
+      this.jwtService.signAsync(
+        payload as any,
+        {
+          secret: accessSecret,
+          expiresIn: accessExpiresIn as any,
+        } as any,
+      ),
+      this.jwtService.signAsync(
+        payload as any,
+        {
+          secret: refreshSecret,
+          expiresIn: refreshExpiresIn as any,
+        } as any,
+      ),
     ]);
 
     return { access_token, refresh_token };
@@ -185,7 +198,10 @@ export class TenantAuthService {
 
       if (admins && admins.length > 0) {
         const admin = admins[0];
-        const isPasswordValid = await bcrypt.compare(tenantLoginDto.password, admin.password);
+        const isPasswordValid = await bcrypt.compare(
+          tenantLoginDto.password,
+          admin.password,
+        );
 
         if (!isPasswordValid || !admin.is_active) {
           throw new UnauthorizedException('Invalid email or password');
@@ -228,7 +244,10 @@ export class TenantAuthService {
       }
 
       const employee = employees[0];
-      const isPasswordValid = await bcrypt.compare(tenantLoginDto.password, employee.password);
+      const isPasswordValid = await bcrypt.compare(
+        tenantLoginDto.password,
+        employee.password,
+      );
 
       if (!isPasswordValid || !employee.is_active) {
         throw new UnauthorizedException('Invalid email or password');

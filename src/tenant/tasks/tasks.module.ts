@@ -5,7 +5,7 @@ import { TasksService } from './tasks.service';
 import { TenantModule } from 'src/superAdmin/tenant/tenant.module';
 
 @Module({
-    imports: [TenantModule],
+  imports: [TenantModule],
   controllers: [TasksController],
   providers: [TasksService],
   exports: [TasksService],
