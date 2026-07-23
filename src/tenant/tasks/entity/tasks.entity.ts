@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('tasks')
 export class Tasks {
@@ -14,11 +20,11 @@ export class Tasks {
   @Column({ type: 'text', nullable: true })
   taskDescription!: string;
 
-  @Column({ type: 'date' })
-  startWork!: Date;
+ @Column({ type: 'date' })
+startWork!: string;
 
-  @Column({ type: 'date' })
-  endWork!: Date;
+@Column({ type: 'date' })
+endWork!: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   assigned_at!: Date;
@@ -60,7 +66,8 @@ export class Tasks {
     default: 'todo',
   })
   status!: string;
-
+  @Column({ type: 'json', nullable: true })
+  images!: string[];
   @Column({ type: 'boolean', default: true })
   is_active!: boolean;
 

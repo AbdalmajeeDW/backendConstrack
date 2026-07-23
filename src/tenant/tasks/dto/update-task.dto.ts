@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsArray, IsNumber, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsNumber,
+  IsDateString,
+} from 'class-validator';
 
 export class UpdateTaskDto {
   @IsOptional()
@@ -33,7 +40,6 @@ export class UpdateTaskDto {
   @IsArray()
   employeeIds?: number[];
 
-  // الحقول الجديدة
   @IsOptional()
   @IsString()
   city?: string;
@@ -57,7 +63,10 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsNumber()
   work_area?: number;
-
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
   @IsOptional()
   @IsString()
   bus_number?: string;

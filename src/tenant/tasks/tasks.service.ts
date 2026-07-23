@@ -12,6 +12,9 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { AssignEmployeesDto } from './dto/assign-employees.dto';
 import { Tasks } from './entity/tasks.entity';
 import { Employee } from '../employee/employee.entity';
+import * as path from 'path';
+import * as fs from 'fs';
+import { extname } from 'path';
 
 @Injectable()
 export class TasksService {
@@ -34,6 +37,7 @@ export class TasksService {
       synchronize: false,
       logging: false,
       charset: 'utf8mb4',
+       dateStrings: true,
     });
     await tenantConnection.initialize();
     return tenantConnection;
@@ -41,109 +45,178 @@ export class TasksService {
 
   private async getTenantDatabaseName(tenantName: string) {
     const tenant = await this.tenantService.findByName(tenantName);
-  
+
     if (tenant.status !== 'active') {
       throw new InternalServerErrorException('Tenant is inactive');
     }
     return tenant.databaseName;
   }
-async createTask(tenantId: string, createTaskDto: CreateTaskDto) {
-  const databaseName = await this.getTenantDatabaseNameById(tenantId);
-  const tenantConnection = await this.createTenantConnection(databaseName);
 
-  try {
-    const result = await tenantConnection.query(
-      `INSERT INTO tasks 
-       (taskName, projectName, taskDescription, startWork, endWork, priority, status, 
-        city, postal_code, house_number, worker_arrival_time, task_type, work_area, bus_number, driver_name)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        createTaskDto.taskName,
-        createTaskDto.projectName,
-        createTaskDto.taskDescription || '',
-        createTaskDto.startWork,
-        createTaskDto.endWork,
-        createTaskDto.priority || 'medium',
-        createTaskDto.status || 'todo',
-        createTaskDto.city || null,
-        createTaskDto.postal_code || null,
-        createTaskDto.house_number || null,
-        createTaskDto.worker_arrival_time || null,
-        createTaskDto.task_type || null,
-        createTaskDto.work_area || null,
-        createTaskDto.bus_number || null,
-        createTaskDto.driver_name || null,
-      ],
-    );
+  async createTask(
+    tenantId: string,
+    createTaskDto: CreateTaskDto,
+    files?: Express.Multer.File[],
+  ) {
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
+    const tenantConnection = await this.createTenantConnection(databaseName);
 
-    let taskId: number;
-    if (result && result.insertId) {
-      taskId = result.insertId;
-    } else if (result && result[0] && result[0].insertId) {
-      taskId = result[0].insertId;
-    } else {
-      const [lastIdResult] = await tenantConnection.query(`SELECT LAST_INSERT_ID() as id`);
-      taskId = lastIdResult.id;
-    }
-
-    if (createTaskDto.employeeIds && createTaskDto.employeeIds.length > 0) {
-      for (const employeeId of createTaskDto.employeeIds) {
-        await tenantConnection.query(
-          `INSERT INTO task_employees (task_id, employee_id) VALUES (?, ?)`,
-          [taskId, employeeId],
-        );
+    try {
+      let imagePaths: string[] = [];
+      if (files && files.length > 0) {
+        imagePaths = await this.saveImages(databaseName, files);
       }
+
+      const imagesJson =
+        imagePaths.length > 0 ? JSON.stringify(imagePaths) : null;
+
+      const result = await tenantConnection.query(
+        `INSERT INTO tasks 
+       (taskName, projectName, taskDescription, startWork, endWork, priority, status, 
+        city, postal_code, house_number, worker_arrival_time, task_type, work_area, 
+        bus_number, driver_name, images)  -- ✅ إضافة حقل images
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          createTaskDto.taskName,
+          createTaskDto.projectName,
+          createTaskDto.taskDescription || '',
+          createTaskDto.startWork,
+          createTaskDto.endWork,
+          createTaskDto.priority || 'medium',
+          createTaskDto.status || 'todo',
+          createTaskDto.city || null,
+          createTaskDto.postal_code || null,
+          createTaskDto.house_number || null,
+          createTaskDto.worker_arrival_time || null,
+          createTaskDto.task_type || null,
+          createTaskDto.work_area || null,
+          createTaskDto.bus_number || null,
+          createTaskDto.driver_name || null,
+          imagesJson,
+        ],
+      );
+
+      let taskId: number;
+      if (result && result.insertId) {
+        taskId = result.insertId;
+      } else if (result && result[0] && result[0].insertId) {
+        taskId = result[0].insertId;
+      } else {
+        const [lastIdResult] = await tenantConnection.query(
+          `SELECT LAST_INSERT_ID() as id`,
+        );
+        taskId = lastIdResult.id;
+      }
+
+      if (
+        createTaskDto.employeeIds &&
+        Array.isArray(createTaskDto.employeeIds)
+      ) {
+        const employeeIds = createTaskDto.employeeIds
+          .map((id) => Number(id))
+          .filter((id) => Number.isInteger(id) && id > 0);
+
+        for (const employeeId of employeeIds) {
+          await tenantConnection.query(
+            `
+      INSERT INTO task_employees 
+      (
+        task_id,
+        employee_id
+      ) 
+      VALUES (?, ?)
+      `,
+            [taskId, employeeId],
+          );
+        }
+      }
+
+      return {
+        id: taskId,
+        message: 'Task created successfully',
+        images: imagePaths,
+      };
+    } finally {
+      await tenantConnection.destroy();
+    }
+  }
+
+  private async saveImages(
+    databaseName: string,
+    files: Express.Multer.File[],
+  ): Promise<string[]> {
+    const uploadDir = `./uploads/tenants/${databaseName}/tasks`;
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    return { id: taskId, message: 'Task created successfully' };
-    
-  } finally {
-    await tenantConnection.destroy();
-  }
-}
-private async getTenantDatabaseNameById(tenantId: string) {
-  if (!tenantId) {
-    throw new Error('Tenant ID is required');
-  }
-  
-  const tenant = await this.tenantService.findById(tenantId);
-  if (!tenant) {
-    throw new Error(`Tenant with ID ${tenantId} not found`);
-  }
-  if (tenant.status !== 'active') {
-    throw new Error('Tenant is inactive');
-  }
-  return tenant.databaseName;
-}
+    const savedPaths: string[] = [];
 
-async getAllTasks(tenantId: string) {
- 
-  
-  const databaseName = await this.getTenantDatabaseNameById(tenantId);
- 
-  
-  const tenantConnection = await this.createTenantConnection(databaseName);
+    for (const file of files) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = extname(file.originalname);
+      const fileName = `${uniqueSuffix}${ext}`;
+      const filePath = path.join(uploadDir, fileName);
 
-  try {
-    const tasks = await tenantConnection.query(
-      `SELECT * FROM tasks WHERE is_active = true ORDER BY created_at DESC`,
-    );
+      if (file.path) {
+        fs.renameSync(file.path, filePath);
+      } else if (file.buffer) {
+        fs.writeFileSync(filePath, file.buffer);
+      }
 
-    for (const task of tasks) {
-      const employees = await tenantConnection.query(
-        `SELECT e.id, e.name, e.email FROM employees e
+      savedPaths.push(`/uploads/tenants/${databaseName}/tasks/${fileName}`);
+    }
+
+    return savedPaths;
+  }
+  private async getTenantDatabaseNameById(tenantId: string) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+
+    const tenant = await this.tenantService.findById(tenantId);
+    if (!tenant) {
+      throw new Error(`Tenant with ID ${tenantId} not found`);
+    }
+    if (tenant.status !== 'active') {
+      throw new Error('Tenant is inactive');
+    }
+    return tenant.databaseName;
+  }
+  async getAllTasks(tenantId: string) {
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
+    const tenantConnection = await this.createTenantConnection(databaseName);
+
+    try {
+      const tasks = await tenantConnection.query(
+        `SELECT * FROM tasks WHERE is_active = true ORDER BY created_at DESC`,
+      );
+
+      for (const task of tasks) {
+        if (task.images) {
+          try {
+            task.images = JSON.parse(task.images);
+          } catch {
+            task.images = [];
+          }
+        } else {
+          task.images = [];
+        }
+
+        const employees = await tenantConnection.query(
+          `SELECT e.id, e.name, e.email FROM employees e
          INNER JOIN task_employees te ON e.id = te.employee_id
          WHERE te.task_id = ?`,
-        [task.id],
-      );
-      task.employees = employees;
-    }
+          [task.id],
+        );
+        task.employees = employees;
+      }
 
-    return tasks;
-  } finally {
-    await tenantConnection.destroy();
+      return tasks;
+    } finally {
+      await tenantConnection.destroy();
+    }
   }
-}
 
   async getTasksByEmployee(tenantId: string, employeeId: number) {
     const databaseName = await this.getTenantDatabaseNameById(tenantId);
@@ -164,7 +237,6 @@ async getAllTasks(tenantId: string) {
       await tenantConnection.destroy();
     }
   }
-
   async getTaskById(tenantName: string, taskId: number) {
     const databaseName = await this.getTenantDatabaseName(tenantName);
     const tenantConnection = await this.createTenantConnection(databaseName);
@@ -179,10 +251,21 @@ async getAllTasks(tenantId: string) {
         throw new NotFoundException('Task not found');
       }
 
+      // ✅ تحويل JSON إلى مصفوفة
+      if (task.images) {
+        try {
+          task.images = JSON.parse(task.images);
+        } catch {
+          task.images = [];
+        }
+      } else {
+        task.images = [];
+      }
+
       const employees = await tenantConnection.query(
         `SELECT e.id, e.name, e.email FROM employees e
-         INNER JOIN task_employees te ON e.id = te.employee_id
-         WHERE te.task_id = ?`,
+       INNER JOIN task_employees te ON e.id = te.employee_id
+       WHERE te.task_id = ?`,
         [taskId],
       );
       task.employees = employees;
@@ -194,95 +277,154 @@ async getAllTasks(tenantId: string) {
   }
 
   async updateTask(
-    tenantName: string,
+    tenantId: string,
     taskId: number,
-    updateTaskDto: UpdateTaskDto,
+    dto: UpdateTaskDto,
+    files?: Express.Multer.File[],
   ) {
-    const databaseName = await this.getTenantDatabaseName(tenantName);
-    const tenantConnection = await this.createTenantConnection(databaseName);
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
+
+    const connection = await this.createTenantConnection(databaseName);
 
     try {
-      const [existing] = await tenantConnection.query(
-        `SELECT * FROM tasks WHERE id = ? AND is_active = true`,
-        [taskId],
-      );
+      const queryRunner = connection.createQueryRunner();
 
-      if (!existing) {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      const taskRepository = queryRunner.manager.getRepository(Tasks);
+
+      const task = await taskRepository.findOne({
+        where: {
+          id: taskId,
+          is_active: true,
+        },
+      });
+
+      if (!task) {
         throw new NotFoundException('Task not found');
       }
+console.log("START:", task?.startWork);
+console.log("TYPE:", typeof task?.startWork);
 
-      const updates: string[] = [];
-      const values: any[] = [];
+console.log("END:", task?.endWork);
+console.log("TYPE:", typeof task?.endWork);
+      Object.assign(task, {
+        taskName: dto.taskName ?? task.taskName,
 
-      if (updateTaskDto.taskName) {
-        updates.push('taskName = ?');
-        values.push(updateTaskDto.taskName);
-      }
-      if (updateTaskDto.projectName) {
-        updates.push('projectName = ?');
-        values.push(updateTaskDto.projectName);
-      }
-      if (updateTaskDto.taskDescription !== undefined) {
-        updates.push('taskDescription = ?');
-        values.push(updateTaskDto.taskDescription);
-      }
-      if (updateTaskDto.startWork) {
-        updates.push('startWork = ?');
-        values.push(updateTaskDto.startWork);
-      }
-      if (updateTaskDto.endWork) {
-        updates.push('endWork = ?');
-        values.push(updateTaskDto.endWork);
-      }
-      if (updateTaskDto.priority) {
-        updates.push('priority = ?');
-        values.push(updateTaskDto.priority);
-      }
-      if (updateTaskDto.status) {
-        updates.push('status = ?');
-        values.push(updateTaskDto.status);
+        projectName: dto.projectName ?? task.projectName,
+
+        taskDescription: dto.taskDescription ?? task.taskDescription,
+
+        startWork: dto.startWork ?? task.startWork,
+
+        endWork: dto.endWork ?? task.endWork,
+
+        priority: dto.priority ?? task.priority,
+
+        status: dto.status ?? task.status,
+
+        city: dto.city ?? task.city,
+
+        postal_code: dto.postal_code ?? task.postal_code,
+
+        house_number: dto.house_number ?? task.house_number,
+
+        worker_arrival_time:
+          dto.worker_arrival_time ?? task.worker_arrival_time,
+
+        task_type: dto.task_type ?? task.task_type,
+
+        work_area:
+          dto.work_area !== undefined ? Number(dto.work_area) : task.work_area,
+
+        bus_number: dto.bus_number ?? task.bus_number,
+
+        driver_name: dto.driver_name ?? task.driver_name,
+      });
+
+      if (files && files.length > 0) {
+        const newImages = await this.saveImages(databaseName, files);
+
+        task.images = [...(task.images || []), ...newImages];
       }
 
-      if (updates.length > 0) {
-        values.push(taskId);
-        await tenantConnection.query(
-          `UPDATE tasks SET ${updates.join(', ')}, updated_at = NOW() WHERE id = ?`,
-          values,
-        );
-      }
+      await taskRepository.save(task);
 
-      if (updateTaskDto.employeeIds) {
-        await tenantConnection.query(
-          `DELETE FROM task_employees WHERE task_id = ?`,
+      if (dto.employeeIds !== undefined) {
+        await queryRunner.query(
+          `
+        DELETE FROM task_employees
+        WHERE task_id = ?
+        `,
           [taskId],
         );
-        for (const employeeId of updateTaskDto.employeeIds) {
-          await tenantConnection.query(
-            `INSERT INTO task_employees (task_id, employee_id) VALUES (?, ?)`,
-            [taskId, employeeId],
+
+        if (dto.employeeIds !== undefined) {
+          await queryRunner.query(
+            `
+    DELETE FROM task_employees
+    WHERE task_id = ?
+    `,
+            [taskId],
           );
+
+          const employeeIds = (dto.employeeIds || [])
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id) && id > 0);
+
+          for (const employeeId of employeeIds) {
+            await queryRunner.query(
+              `
+      INSERT INTO task_employees
+      (
+        task_id,
+        employee_id
+      )
+      VALUES (?,?)
+      `,
+              [taskId, employeeId],
+            );
+          }
         }
       }
 
-      const [updatedTask] = await tenantConnection.query(
-        `SELECT * FROM tasks WHERE id = ?`,
+      await queryRunner.commitTransaction();
+
+      const updatedTask = await connection.getRepository(Tasks).findOne({
+        where: {
+          id: taskId,
+        },
+      });
+
+      if (updatedTask && !updatedTask.images) {
+        updatedTask.images = [];
+      }
+
+      const employees = await connection.query(
+        `
+      SELECT 
+        e.id,
+        e.name,
+        e.email
+      FROM employees e
+      INNER JOIN task_employees te
+      ON e.id = te.employee_id
+      WHERE te.task_id = ?
+      `,
         [taskId],
       );
 
-      const employees = await tenantConnection.query(
-        `SELECT e.id, e.name, e.email FROM employees e
-         INNER JOIN task_employees te ON e.id = te.employee_id
-         WHERE te.task_id = ?`,
-        [taskId],
-      );
-      updatedTask.employees = employees;
-
-      return updatedTask;
+      return {
+        ...updatedTask,
+        employees,
+      };
+    } catch (error) {
+      throw error;
     } finally {
-      await tenantConnection.destroy();
+      await connection.destroy();
     }
   }
-
   async deleteTask(tenantName: string, taskId: number) {
     const databaseName = await this.getTenantDatabaseName(tenantName);
     const tenantConnection = await this.createTenantConnection(databaseName);

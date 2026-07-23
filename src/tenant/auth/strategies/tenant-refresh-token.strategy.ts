@@ -6,7 +6,10 @@ import { DataSource } from 'typeorm';
 import { TenantService } from '../../../superAdmin/tenant/tenant.service';
 
 @Injectable()
-export class TenantRefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-tenant-refresh') {
+export class TenantRefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-tenant-refresh',
+) {
   constructor(
     @InjectDataSource('master')
     private readonly masterDataSource: DataSource,
@@ -42,13 +45,15 @@ export class TenantRefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-
 
   async validate(payload: any) {
     const tenant = await this.tenantService.findById(payload.tenantId);
-    console.log(payload.tenantId,'ohhhhhh');
+    console.log(payload.tenantId, 'ohhhhhh');
 
     if (tenant.status !== 'active') {
       throw new UnauthorizedException('Tenant inactive');
     }
 
-    const tenantConnection = await this.createTenantConnection(tenant.databaseName);
+    const tenantConnection = await this.createTenantConnection(
+      tenant.databaseName,
+    );
     try {
       const admins: any[] = await tenantConnection.query(
         'SELECT id, name, email, refresh_token FROM tenant_admins WHERE id = ? AND is_active = true',

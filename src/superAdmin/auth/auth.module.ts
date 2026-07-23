@@ -15,7 +15,7 @@ import { UserModule } from '../user/user.module';
     PassportModule,
     JwtModule.register({}),
     TypeOrmModule.forFeature([User], 'master'),
-    UserModule, 
+    UserModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],

@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('super_admins')
 export class User {
@@ -19,7 +25,7 @@ export class User {
 
   @Column({ default: true })
   is_active!: boolean;
-   @Column({ type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true })
   refresh_token!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })

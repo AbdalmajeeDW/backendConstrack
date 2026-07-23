@@ -1,12 +1,16 @@
 // src/superAdmin/user/user.service.ts
-import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
-
 
 @Injectable()
 export class UserService {
@@ -20,7 +24,15 @@ export class UserService {
   async findAll() {
     try {
       const users = await this.userRepository.find({
-        select: ['id', 'name', 'email', 'address', 'is_active', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'address',
+          'is_active',
+          'created_at',
+          'updated_at',
+        ],
         order: { created_at: 'DESC' },
       });
       return users;
@@ -33,7 +45,15 @@ export class UserService {
     try {
       const user = await this.userRepository.findOne({
         where: { id: parseInt(id) },
-        select: ['id', 'name', 'email', 'address', 'is_active', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'address',
+          'is_active',
+          'created_at',
+          'updated_at',
+        ],
       });
 
       if (!user) {
@@ -53,7 +73,15 @@ export class UserService {
     try {
       const user = await this.userRepository.findOne({
         where: { email },
-        select: ['id', 'name', 'email', 'address', 'is_active', 'created_at', 'updated_at'],
+        select: [
+          'id',
+          'name',
+          'email',
+          'address',
+          'is_active',
+          'created_at',
+          'updated_at',
+        ],
       });
 
       return user;
@@ -102,7 +130,7 @@ export class UserService {
     }
 
     await this.userRepository.save(user);
-    
+
     const { password: _, ...result } = user;
     return result;
   }

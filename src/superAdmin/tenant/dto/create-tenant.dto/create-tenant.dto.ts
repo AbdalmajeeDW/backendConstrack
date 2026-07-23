@@ -1,5 +1,14 @@
 // src/super-admin/tenants/dto/create-tenant.dto.ts
-import { IsString, IsEmail, IsOptional, IsNumber, Min, Max, IsDateString, IsDecimal } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsDateString,
+  IsDecimal,
+} from 'class-validator';
 
 export class CreateTenantDto {
   @IsString()
@@ -13,11 +22,10 @@ export class CreateTenantDto {
   @IsString()
   phone?: string;
 
-
-   @IsOptional()
+  @IsOptional()
   @IsString()
   databaseName!: string;
-   @IsOptional()
+  @IsOptional()
   @IsString()
   plan!: string;
   @IsString()
@@ -25,21 +33,20 @@ export class CreateTenantDto {
 
   @IsString()
   adminPassword!: string;
-    @IsString()
+  @IsString()
   status!: string;
 
   @IsEmail()
   adminEmail!: string;
 
-  @IsDateString()
-  subscriptionStartDate!: Date;
+@IsDateString()
+subscriptionStartDate!: string;
 
-  @IsDateString()
-  subscriptionEndDate!: Date;
-
-  @IsOptional()
-  @IsDecimal()
-  discount?: number;
+@IsDateString()
+subscriptionEndDate!: string;
+@IsOptional()
+@IsDecimal()
+discount!: string;
 
   @IsOptional()
   @IsString()
