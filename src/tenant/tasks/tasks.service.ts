@@ -193,15 +193,17 @@ export class TasksService {
       );
 
       for (const task of tasks) {
-        if (task.images) {
-          try {
-            task.images = JSON.parse(task.images);
-          } catch {
-            task.images = [];
-          }
-        } else {
-          task.images = [];
-        }
+      if (task.images) {
+  if (typeof task.images === 'string') {
+    try {
+      task.images = JSON.parse(task.images);
+    } catch {
+      task.images = [];
+    }
+  }
+} else {
+  task.images = [];
+}
 
         const employees = await tenantConnection.query(
           `SELECT e.id, e.name, e.email FROM employees e
