@@ -10,7 +10,7 @@ import { TenantAuthModule } from './tenant/auth/tenant-auth.module';
 import { EmployeeModule } from './tenant/employee/employee.module';
 import { AdminModule } from './tenant/admin/admin.module';
 import { TasksModule } from './tenant/tasks/tasks.module';
-
+import { ProjectsModule } from './tenant/projects/projects.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -31,6 +31,7 @@ import { TasksModule } from './tenant/tasks/tasks.module';
     TenantAuthModule,
     EmployeeModule,
     AdminModule,
+    ProjectsModule
   ],
   controllers: [AppController],
   providers: [AppService],

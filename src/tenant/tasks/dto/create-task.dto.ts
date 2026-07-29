@@ -7,6 +7,7 @@ import {
   IsDecimal,
   IsDateString,
   IsIn,
+  IsInt,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -14,13 +15,14 @@ export class CreateTaskDto {
   @IsString()
   taskName!: string;
 
-  @IsString()
-  projectName!: string;
+
 
   @IsOptional()
   @IsString()
   taskDescription?: string;
-
+@IsOptional()
+@IsInt()
+project_id?: number;
   @IsDateString()
   startWork!: string;
 

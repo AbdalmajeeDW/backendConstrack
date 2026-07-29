@@ -45,7 +45,7 @@ export class TenantAccessTokenStrategy extends PassportStrategy(
 
   async validate(payload: any) {
     const tenant = await this.tenantService.findById(payload.tenantId);
-    console.log(payload, 'ohhhhhh');
+  
 
     if (tenant.status !== 'active') {
       throw new UnauthorizedException('Tenant inactive');

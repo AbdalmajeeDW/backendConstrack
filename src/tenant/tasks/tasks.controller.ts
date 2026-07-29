@@ -106,7 +106,7 @@ export class TasksController {
     @Body() body: any,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    console.log('USER:', req.user);
+  
 
     return this.tasksService.updateTask(req.user.tenantId, id, body, files);
   }

@@ -37,7 +37,7 @@ export class TasksService {
       synchronize: false,
       logging: false,
       charset: 'utf8mb4',
-       dateStrings: true,
+      dateStrings: true,
     });
     await tenantConnection.initialize();
     return tenantConnection;
@@ -71,13 +71,13 @@ export class TasksService {
 
       const result = await tenantConnection.query(
         `INSERT INTO tasks 
-       (taskName, projectName, taskDescription, startWork, endWork, priority, status, 
+       (taskName, project_id, taskDescription, startWork, endWork, priority, status, 
         city, postal_code, house_number, worker_arrival_time, task_type, work_area, 
-        bus_number, driver_name, images)  -- ✅ إضافة حقل images
+        bus_number, driver_name, images) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           createTaskDto.taskName,
-          createTaskDto.projectName,
+          createTaskDto.project_id || null,
           createTaskDto.taskDescription || '',
           createTaskDto.startWork,
           createTaskDto.endWork,
@@ -193,17 +193,17 @@ export class TasksService {
       );
 
       for (const task of tasks) {
-      if (task.images) {
-  if (typeof task.images === 'string') {
-    try {
-      task.images = JSON.parse(task.images);
-    } catch {
-      task.images = [];
-    }
-  }
-} else {
-  task.images = [];
-}
+        if (task.images) {
+          if (typeof task.images === 'string') {
+            try {
+              task.images = JSON.parse(task.images);
+            } catch {
+              task.images = [];
+            }
+          }
+        } else {
+          task.images = [];
+        }
 
         const employees = await tenantConnection.query(
           `SELECT e.id, e.name, e.email FROM employees e
@@ -306,15 +306,10 @@ export class TasksService {
       if (!task) {
         throw new NotFoundException('Task not found');
       }
-console.log("START:", task?.startWork);
-console.log("TYPE:", typeof task?.startWork);
-
-console.log("END:", task?.endWork);
-console.log("TYPE:", typeof task?.endWork);
       Object.assign(task, {
         taskName: dto.taskName ?? task.taskName,
 
-        projectName: dto.projectName ?? task.projectName,
+        project_id: dto.project_id ?? task.project_id,
 
         taskDescription: dto.taskDescription ?? task.taskDescription,
 

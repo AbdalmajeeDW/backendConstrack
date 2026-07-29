@@ -14,8 +14,8 @@ export class Tasks {
   @Column({ length: 255 })
   taskName!: string;
 
-  @Column({ length: 255 })
-  projectName!: string;
+  @Column()
+  project_id!: number;
 
   @Column({ type: 'text', nullable: true })
   taskDescription!: string;

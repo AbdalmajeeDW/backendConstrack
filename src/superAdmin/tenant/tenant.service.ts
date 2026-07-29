@@ -296,32 +296,100 @@ export class TenantService {
       );
     }
   }
+  private async createTenantProjectsTable(databaseName: string) {
+    try {
+      await this.dataSource.query(
+        `CREATE TABLE IF NOT EXISTS \`${databaseName}\`.\`projects\` (
+        id INT AUTO_INCREMENT PRIMARY KEY,
 
+        name VARCHAR(255) NOT NULL,
+
+        description TEXT NULL,
+        client_name VARCHAR(255) NULL,
+        client_phone VARCHAR(50) NULL,
+        location VARCHAR(255) NULL,
+        city VARCHAR(100) NULL,
+        postal_code VARCHAR(50) NULL,
+       
+
+        start_date DATE NULL,
+
+        end_date DATE NULL,
+
+        status ENUM(
+          'planning',
+          'active',
+          'completed',
+          'cancelled'
+        ) DEFAULT 'planning',
+
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+        updated_at TIMESTAMP NOT NULL 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP
+
+      ) ENGINE=InnoDB 
+      DEFAULT CHARSET=utf8mb4 
+      COLLATE=utf8mb4_unicode_ci`,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create tenant projects table',
+      );
+    }
+  }
   private async createTenantTasksTable(databaseName: string) {
     try {
       await this.dataSource.query(
         `CREATE TABLE IF NOT EXISTS \`${databaseName}\`.\`tasks\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
+
         taskName VARCHAR(255) NOT NULL,
-        projectName VARCHAR(255) NOT NULL,
+
+        project_id INT NULL,
+
         assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
         city VARCHAR(255) NULL,
+
         images JSON NULL,
+
         postal_code VARCHAR(50) NULL,
+
         house_number VARCHAR(50) NULL,
+
         worker_arrival_time TIME NULL,
+
         task_type VARCHAR(255) NULL,
+
         work_area DECIMAL(10,2) NULL,
+
         bus_number VARCHAR(100) NULL,
+
         driver_name VARCHAR(255) NULL,
+
         taskDescription TEXT NULL,
+
         startWork DATE NOT NULL,
+
         endWork DATE NOT NULL,
+
         priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
+
         status ENUM('todo', 'in_progress', 'review', 'done') DEFAULT 'todo',
+
         is_active BOOLEAN NOT NULL DEFAULT true,
+
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE SET NULL
+
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
       );
     } catch (error) {
@@ -383,6 +451,18 @@ export class TenantService {
       );
     }
   }
+  async getTenantDatabaseNameById(tenantId: string) {
+    const tenant = await this.tenantRepository.findOne({
+      where: { id: parseInt(tenantId) },
+      select: ['databaseName'],
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    return tenant.databaseName;
+  }
   async create(createTenantDto: CreateTenantDto) {
     const existing = await this.findByAdminEmail(createTenantDto.adminEmail);
     if (existing) {
@@ -400,6 +480,7 @@ export class TenantService {
     try {
       await this.createTenantEmployeeTable(databaseName);
       await this.createTenantAdminTable(databaseName);
+      await this.createTenantProjectsTable(databaseName);
       await this.createTenantTasksTable(databaseName);
       await this.createTaskEmployeesTable(databaseName);
 
@@ -425,8 +506,8 @@ export class TenantService {
         subscriptionStartDate: createTenantDto.subscriptionStartDate,
         subscriptionEndDate: createTenantDto.subscriptionEndDate,
         discount: createTenantDto.discount
-    ? Number(createTenantDto.discount)
-    : undefined,
+          ? Number(createTenantDto.discount)
+          : undefined,
         industry: createTenantDto.industry,
         maxEmployees: createTenantDto.maxEmployees,
         kvkNumber: createTenantDto.kvkNumber,

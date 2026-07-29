@@ -5,6 +5,7 @@ import {
   IsArray,
   IsNumber,
   IsDateString,
+  IsInt,
 } from 'class-validator';
 
 export class UpdateTaskDto {
@@ -12,9 +13,9 @@ export class UpdateTaskDto {
   @IsString()
   taskName?: string;
 
-  @IsOptional()
-  @IsString()
-  projectName?: string;
+ @IsOptional()
+ @IsInt()
+ project_id?: number;
 
   @IsOptional()
   @IsString()

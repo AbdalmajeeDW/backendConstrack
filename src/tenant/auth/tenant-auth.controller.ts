@@ -30,9 +30,6 @@ export class TenantAuthController {
   @Post('logout')
   @UseGuards(TenantJwtAuthGuard)
   async logout(@Request() req: any) {
-    console.log('LOGOUT HIT');
-    console.log(req.user);
-
     return this.tenantAuthService.logout(req.user.tenantId, req.user.id);
   }
 }
