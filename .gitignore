@@ -11,7 +11,9 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-
+# Tenant logs module - source code
+!src/tenant/logs/
+!src/tenant/logs/**
 # OS
 .DS_Store
 
