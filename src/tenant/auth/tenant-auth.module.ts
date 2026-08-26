@@ -8,9 +8,10 @@ import { TenantAccessTokenStrategy } from './strategies/tenant-access-token.stra
 import { TenantRefreshTokenStrategy } from './strategies/tenant-refresh-token.strategy';
 import { TenantJwtAuthGuard } from './tenant-jwt-auth.guard';
 import { TenantModule } from '../../superAdmin/tenant/tenant.module';
+import { TenantLogsModule } from '../logs/logs.module';
 
 @Module({
-  imports: [PassportModule, JwtModule.register({}), TenantModule],
+  imports: [PassportModule, JwtModule.register({}), TenantModule,TenantLogsModule],
   controllers: [TenantAuthController],
   providers: [
     TenantAuthService,

@@ -12,6 +12,8 @@ export class TenantJwtAuthGuard extends AuthGuard('jwt-tenant-access') {
   }
 
   handleRequest(err: any, user: any, info: any) {
+    console.log(user);
+    
     if (err || !user) {
       throw err || new UnauthorizedException('Invalid or expired token');
     }

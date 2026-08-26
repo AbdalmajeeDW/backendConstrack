@@ -45,8 +45,8 @@ subscriptionStartDate!: string;
 @IsDateString()
 subscriptionEndDate!: string;
 @IsOptional()
-@IsDecimal()
-discount!: string;
+@IsNumber()
+discount?: number;
 
   @IsOptional()
   @IsString()

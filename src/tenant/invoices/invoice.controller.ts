@@ -1,4 +1,4 @@
-// tasks.controller.ts
+// invoice.controller.ts
 import {
   Controller,
   Get,
@@ -12,22 +12,85 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFiles,
-  Headers,
 } from '@nestjs/common';
-import { TasksService } from './tasks.service';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { AssignEmployeesDto } from './dto/assign-employees.dto';
+import { InvoicesService } from './invoice.service';
+import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { TenantJwtAuthGuard } from '../auth/tenant-jwt-auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { extname } from 'path/win32';
+import { extname } from 'path';
 import { diskStorage } from 'multer';
+import { InvoiceStatus } from './entity/invoice.entity';
 
-@Controller('tenant/tasks')
+@Controller('tenant/invoices')
 @UseGuards(TenantJwtAuthGuard)
-export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+export class InvoicesController {
+  constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post()
+  @UseInterceptors(
+    FilesInterceptor('images', 20, {
+      storage: diskStorage({
+        destination: './uploads/temp',
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${uniqueSuffix}${ext}`);
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+        files: 20,
+      },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return callback(new Error('Only images are allowed'), false);
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  create(
+    @Request() req: any,
+    @Body() dto: CreateInvoiceDto,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ) {
+    return this.invoicesService.create(
+      req.user.tenantId,
+      dto, 
+      files, 
+      req.user.id, 
+      req.ip || req.socket.remoteAddress,
+      req.headers['user-agent'], 
+      req.user.role,
+    );
+  }
+
+  @Get()
+  findAll(@Request() req: any) {
+    return this.invoicesService.findAll(req.user.tenantId);
+  }
+
+  @Get('employee/:employeeId')
+  findByEmployee(
+    @Request() req: any,
+    @Param('employeeId', ParseIntPipe) employeeId: number,
+  ) {
+     console.log('🔍 User Role:', req.user.role);
+  console.log('🔍 User ID:', req.user.id);
+    return this.invoicesService.findByEmployee(req.user.tenantId, employeeId, 
+   
+      req.ip || req.socket.remoteAddress,
+      req.headers['user-agent'], req.user.role);
+  }
+
+  @Get(':id')
+  findOne(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
+    return this.invoicesService.findOne(req.user.tenantId, id);
+  }
+
+  @Patch(':id')
   @UseInterceptors(
     FilesInterceptor('images', 20, {
       storage: diskStorage({
@@ -51,105 +114,26 @@ export class TasksController {
       },
     }),
   )
-  create(
-    @Request() req: any,
-    @Body() dto: CreateTaskDto,
-    @UploadedFiles() files?: Express.Multer.File[],
-  ) {
-    return this.tasksService.createTask(req.user.tenantId, dto, files);
-  }
-
-  @Get()
-  findAll(@Request() req: any) {
-    return this.tasksService.getAllTasks(req.user.tenantId);
-  }
-
-  @Get('employee/:employeeId')
-  getByEmployee(
-    
-    @Request() req: any,
-    @Param('employeeId', ParseIntPipe) employeeId: number,
-
-  ) {
-    return this.tasksService.getTasksByEmployee(
-      req.user.tenantId,
-      employeeId,
-
-      req.user.id,
-      req.ip || req.socket.remoteAddress,
-      req.headers['user-agent'],
-      req.user.role,
-     
-    );
-  }
-
-  @Get(':id')
-  findOne(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.tasksService.getTaskById(req.user.tenantName, id);
-  }
-
-  @Get(':id/employees')
-  getEmployees(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.tasksService.getTaskEmployees(req.user.tenantName, id);
-  }
-
-  @Patch(':id')
-  @UseInterceptors(
-    FilesInterceptor('images', 20, {
-      storage: diskStorage({
-        destination: './uploads/temp',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-
-          const ext = extname(file.originalname);
-
-          callback(null, `${uniqueSuffix}${ext}`);
-        },
-      }),
-    }),
-  )
-  async update(
+  update(
     @Request() req: any,
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
+    @Body() dto: UpdateInvoiceDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.tasksService.updateTask(req.user.tenantId, id, body, files,
-      req.user.id,
-      req.ip || req.socket.remoteAddress,
-      req.headers['user-agent'],
-      req.user.role,);
+    return this.invoicesService.update(req.user.tenantId, id, dto, files);
+  }
+
+  @Patch(':id/status')
+  updateStatus(
+    @Request() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: InvoiceStatus,
+  ) {
+    return this.invoicesService.updateStatus(req.user.tenantId, id, status);
   }
 
   @Delete(':id')
   delete(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.tasksService.deleteTask(req.user.tenantName, id);
-  }
-
-  @Post(':id/assign-employees')
-  assignEmployees(
-    @Request() req: any,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: AssignEmployeesDto,
-  ) {
-    return this.tasksService.assignEmployeesToTask(
-      req.user.tenantName,
-      id,
-      dto,
-    );
-  }
-
-  @Delete(':id/employees/:employeeId')
-  removeEmployee(
-    @Request() req: any,
-    @Param('id', ParseIntPipe) id: number,
-    @Param('employeeId', ParseIntPipe) employeeId: number,
-  ) {
-    return this.tasksService.removeEmployeeFromTask(
-      req.user.tenantName,
-      id,
-      employeeId,
-    );
+    return this.invoicesService.delete(req.user.tenantId, id);
   }
 }

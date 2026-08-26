@@ -44,9 +44,9 @@ export class TenantAccessTokenStrategy extends PassportStrategy(
   }
 
   async validate(payload: any) {
+   
+    
     const tenant = await this.tenantService.findById(payload.tenantId);
-  
-
     if (tenant.status !== 'active') {
       throw new UnauthorizedException('Tenant inactive');
     }
@@ -54,13 +54,19 @@ export class TenantAccessTokenStrategy extends PassportStrategy(
     const tenantConnection = await this.createTenantConnection(
       tenant.databaseName,
     );
-    try {
-      const admins: any[] = await tenantConnection.query(
-        'SELECT id, name, email FROM tenant_admins WHERE id = ? AND is_active = true',
-        [payload.sub],
-      );
 
-      if (admins && admins.length > 0) {
+    try {
+      if (payload.role === 'tenant_admin') {
+        const admins: any[] = await tenantConnection.query(
+          'SELECT id, name, email FROM tenant_admins WHERE id = ? AND is_active = true',
+          [payload.sub],
+        );
+
+        if (!admins || admins.length === 0) {
+          throw new UnauthorizedException('Admin not found or inactive');
+        }
+
+        console.log('✅ Admin authenticated:', admins[0]);
         return {
           id: admins[0].id,
           name: admins[0].name,
@@ -68,24 +74,24 @@ export class TenantAccessTokenStrategy extends PassportStrategy(
           tenantId: payload.tenantId,
           role: 'tenant_admin',
         };
+      } else {
+        const employees: any[] = await tenantConnection.query(
+          'SELECT id, name, email FROM employees WHERE id = ? AND is_active = true',
+          [payload.sub],
+        );
+
+        if (!employees || employees.length === 0) {
+          throw new UnauthorizedException('Employee not found or inactive');
+        }
+
+        return {
+          id: employees[0].id,
+          name: employees[0].name,
+          email: employees[0].email,
+          tenantId: payload.tenantId,
+          role: 'tenant_employee',
+        };
       }
-
-      const employees: any[] = await tenantConnection.query(
-        'SELECT id, name, email FROM employees WHERE id = ? AND is_active = true',
-        [payload.sub],
-      );
-
-      if (!employees || employees.length === 0) {
-        throw new UnauthorizedException('User not found or inactive');
-      }
-
-      return {
-        id: employees[0].id,
-        name: employees[0].name,
-        email: employees[0].email,
-        tenantId: payload.tenantId,
-        role: 'tenant_employee',
-      };
     } finally {
       await tenantConnection.destroy();
     }

@@ -62,14 +62,14 @@ endWork!: string;
 
   @Column({
     type: 'enum',
-    enum: ['todo', 'in_progress', 'review', 'done'],
-    default: 'todo',
+    enum: ['in_progress', 'done'],
+    default: 'in_progress',
   })
   status!: string;
   @Column({ type: 'json', nullable: true })
   images!: string[];
-  @Column({ type: 'boolean', default: true })
-  is_active!: boolean;
+  // @Column({ type: 'boolean', default: true })
+  // is_active!: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at!: Date;

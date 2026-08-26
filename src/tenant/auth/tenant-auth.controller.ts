@@ -18,8 +18,12 @@ export class TenantAuthController {
   }
 
   @Post('login')
-  async login(@Body() tenantLoginDto: TenantLoginDto) {
-    return this.tenantAuthService.login(tenantLoginDto);
+  async login(@Body() tenantLoginDto: TenantLoginDto,
+@Request() req: any,
+
+) {
+  
+    return this.tenantAuthService.login(tenantLoginDto,req);
   }
 
   @Post('refresh')

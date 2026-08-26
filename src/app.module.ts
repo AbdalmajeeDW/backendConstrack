@@ -10,19 +10,24 @@ import { TenantAuthModule } from './tenant/auth/tenant-auth.module';
 import { EmployeeModule } from './tenant/employee/employee.module';
 import { AdminModule } from './tenant/admin/admin.module';
 import { TasksModule } from './tenant/tasks/tasks.module';
+import { ConfigModule } from '@nestjs/config';
 import { ProjectsModule } from './tenant/projects/projects.module';
+import { InvoicesModule } from './tenant/invoices/invoice.module';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+  isGlobal: true,
+}),
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'constrack_master',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
-      name: 'master',
+ type: 'mysql',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  synchronize: true,
+  name: 'master',
     }),
     TenantModule,
     TasksModule,
@@ -31,7 +36,8 @@ import { ProjectsModule } from './tenant/projects/projects.module';
     TenantAuthModule,
     EmployeeModule,
     AdminModule,
-    ProjectsModule
+    ProjectsModule,
+    InvoicesModule
   ],
   controllers: [AppController],
   providers: [AppService],

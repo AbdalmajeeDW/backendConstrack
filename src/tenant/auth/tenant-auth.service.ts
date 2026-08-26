@@ -13,6 +13,7 @@ import { TenantService } from '../../superAdmin/tenant/tenant.service';
 import { TenantLoginDto } from './dto/tenant-login.dto';
 import { TenantRefreshTokenDto } from './dto/tenant-refresh-token.dto';
 import { TenantRegisterDto } from './dto/tenant-register.dto';
+import { TenantLogsService } from '../logs/logs.service'; // ✅ استيراد
 
 @Injectable()
 export class TenantAuthService {
@@ -21,6 +22,7 @@ export class TenantAuthService {
     private readonly masterDataSource: DataSource,
     private readonly jwtService: JwtService,
     private readonly tenantService: TenantService,
+    private readonly logsService: TenantLogsService,
   ) {}
 
   private buildTenantDataSourceOptions(databaseName: string): any {
@@ -185,7 +187,7 @@ export class TenantAuthService {
     }
   }
 
-  async login(tenantLoginDto: TenantLoginDto) {
+  async login(tenantLoginDto: TenantLoginDto, req?: any) {
     const databaseName = await this.getTenantDatabaseName(tenantLoginDto.name);
     const tenant = await this.tenantService.findByName(tenantLoginDto.name);
 
@@ -223,13 +225,12 @@ export class TenantAuthService {
         return {
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
-          expires_in: 900,
           user: {
             id: admin.id,
             name: admin.name,
             email: admin.email,
-            role: 'tenant_admin',
-            tenantId: tenant.id,
+            roleEn: 'tenant_admin',
+            roleAr: 'مدير',
           },
         };
       }
@@ -266,6 +267,23 @@ export class TenantAuthService {
         [tokens.refresh_token, employee.id],
       );
 
+      try {
+        const message = {
+          en: `Employee ${employee.email} logged in successfully`,
+          ar: `قام الموظف ${employee.email} بتسجيل الدخول بنجاح`,
+        };
+
+        await this.logsService.logActivity(tenant.id.toString(), {
+          employeeId: employee.id,
+          action: 'login',
+          details: JSON.stringify(message),
+          ipAddress: req?.ip || req?.socket?.remoteAddress,
+          userAgent: req?.headers?.['user-agent'],
+        });
+      } catch (logError) {
+        console.error('⚠️ Failed to log login activity:', logError);
+      }
+
       return {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
@@ -274,7 +292,8 @@ export class TenantAuthService {
           id: employee.id,
           name: employee.name,
           email: employee.email,
-          role: 'tenant_employee',
+          roleEn: 'tenant_employee',
+          roleAr: 'موظف',
           tenantId: tenant.id.toString(),
         },
       };
@@ -282,7 +301,6 @@ export class TenantAuthService {
       await tenantConnection.destroy();
     }
   }
-
   async refreshToken(tenantRefreshTokenDto: TenantRefreshTokenDto) {
     const refreshSecret =
       process.env.JWT_REFRESH_SECRET_TENANT ||

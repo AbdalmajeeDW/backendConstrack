@@ -34,8 +34,8 @@ export class UpdateTaskDto {
   priority?: 'low' | 'medium' | 'high' | 'urgent';
 
   @IsOptional()
-  @IsEnum(['todo', 'in_progress', 'review', 'done'])
-  status?: 'todo' | 'in_progress' | 'review' | 'done';
+  @IsEnum([ 'in_progress', 'done'])
+  status?: 'in_progress' | 'done';
 
   @IsOptional()
   @IsArray()

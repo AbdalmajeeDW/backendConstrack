@@ -38,14 +38,14 @@ export class UpdateTenantDto {
 
   @IsOptional()
   @IsDateString()
-  subscriptionStartDate?: Date;
+  subscriptionStartDate?: string;
 
   @IsOptional()
   @IsDateString()
-  subscriptionEndDate?: Date;
+  subscriptionEndDate?: string;
 
   @IsOptional()
-  @IsDecimal()
+  @IsNumber()
   discount?: number;
 
   @IsOptional()
