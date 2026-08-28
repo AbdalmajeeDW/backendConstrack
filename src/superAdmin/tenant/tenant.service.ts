@@ -220,10 +220,10 @@ export class TenantService {
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '')}`;
   }
-private async createTenantInvoiceTable(databaseName: string) {
-  try {
-    await this.dataSource.query(
-      `
+  private async createTenantInvoiceTable(databaseName: string) {
+    try {
+      await this.dataSource.query(
+        `
       CREATE TABLE \`${databaseName}\`.\`invoices\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -253,13 +253,13 @@ private async createTenantInvoiceTable(databaseName: string) {
       DEFAULT CHARSET=utf8mb4 
       COLLATE=utf8mb4_unicode_ci
       `,
-    );
-  } catch (error) {
-    throw new InternalServerErrorException(
-      'Failed to create tenant invoice table',
-    );
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create tenant invoice table',
+      );
+    }
   }
-}
   private async databaseExists(databaseName: string) {
     const rows = await this.dataSource.query(
       'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?',
@@ -267,10 +267,10 @@ private async createTenantInvoiceTable(databaseName: string) {
     );
     return rows.length > 0;
   }
-private async createTenantLogsTable(databaseName: string) {
-  try {
-    await this.dataSource.query(
-      `
+  private async createTenantLogsTable(databaseName: string) {
+    try {
+      await this.dataSource.query(
+        `
       CREATE TABLE IF NOT EXISTS \`${databaseName}\`.\`system_logs\` (
         id INT AUTO_INCREMENT PRIMARY KEY,
         
@@ -319,13 +319,13 @@ private async createTenantLogsTable(databaseName: string) {
       DEFAULT CHARSET=utf8mb4 
       COLLATE=utf8mb4_unicode_ci
       `,
-    );
-  } catch (error) {
-    throw new InternalServerErrorException(
-      'Failed to create tenant logs table',
-    );
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create tenant logs table',
+      );
+    }
   }
-}
   private async buildUniqueDatabaseName(baseName: string) {
     let databaseName = baseName;
     let suffix = 1;
@@ -581,7 +581,7 @@ private async createTenantLogsTable(databaseName: string) {
       await this.createTenantTasksTable(databaseName);
       await this.createTenantInvoiceTable(databaseName);
       await this.createTaskEmployeesTable(databaseName);
-      await this.createTenantLogsTable(databaseName); 
+      await this.createTenantLogsTable(databaseName);
       const hashedPassword = await bcrypt.hash(
         createTenantDto.adminPassword,
         10,

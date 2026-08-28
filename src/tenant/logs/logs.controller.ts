@@ -36,9 +36,6 @@ export class TenantLogsController {
       throw new BadRequestException('Tenant ID is required');
     }
 
-    console.log('👤 User from token:', req.user);
-    console.log('🏢 Tenant ID:', tenantId);
-
     return this.logsService.logActivity(tenantId, {
       employeeId: body.employeeId,
       action: body.action,
@@ -65,8 +62,7 @@ export class TenantLogsController {
       throw new BadRequestException('Tenant ID is required');
     }
 
-    console.log('👤 User from token:', req.user);
-    console.log('🏢 Tenant ID:', tenantId);
+  
 
     return this.logsService.getActivities(tenantId, {
       employeeId,

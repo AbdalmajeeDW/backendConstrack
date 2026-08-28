@@ -77,8 +77,7 @@ export class InvoicesController {
     @Request() req: any,
     @Param('employeeId', ParseIntPipe) employeeId: number,
   ) {
-     console.log('🔍 User Role:', req.user.role);
-  console.log('🔍 User ID:', req.user.id);
+
     return this.invoicesService.findByEmployee(req.user.tenantId, employeeId, 
    
       req.ip || req.socket.remoteAddress,

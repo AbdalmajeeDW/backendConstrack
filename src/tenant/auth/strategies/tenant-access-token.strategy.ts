@@ -66,7 +66,6 @@ export class TenantAccessTokenStrategy extends PassportStrategy(
           throw new UnauthorizedException('Admin not found or inactive');
         }
 
-        console.log('✅ Admin authenticated:', admins[0]);
         return {
           id: admins[0].id,
           name: admins[0].name,

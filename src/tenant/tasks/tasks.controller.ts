@@ -66,10 +66,8 @@ export class TasksController {
 
   @Get('employee/:employeeId')
   getByEmployee(
-    
     @Request() req: any,
     @Param('employeeId', ParseIntPipe) employeeId: number,
-
   ) {
     return this.tasksService.getTasksByEmployee(
       req.user.tenantId,
@@ -79,18 +77,17 @@ export class TasksController {
       req.ip || req.socket.remoteAddress,
       req.headers['user-agent'],
       req.user.role,
-     
     );
   }
 
   @Get(':id')
   findOne(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.tasksService.getTaskById(req.user.tenantName, id);
+    return this.tasksService.getTaskById(req.user.tenantId, id);
   }
 
   @Get(':id/employees')
   getEmployees(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.tasksService.getTaskEmployees(req.user.tenantName, id);
+    return this.tasksService.getTaskEmployees(req.user.tenantId, id);
   }
 
   @Patch(':id')
@@ -115,16 +112,21 @@ export class TasksController {
     @Body() body: any,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return this.tasksService.updateTask(req.user.tenantId, id, body, files,
+    return this.tasksService.updateTask(
+      req.user.tenantId,
+      id,
+      body,
+      files,
       req.user.id,
       req.ip || req.socket.remoteAddress,
       req.headers['user-agent'],
-      req.user.role,);
+      req.user.role,
+    );
   }
 
   @Delete(':id')
   delete(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.tasksService.deleteTask(req.user.tenantName, id);
+    return this.tasksService.deleteTask(req.user.tenantId, id);
   }
 
   @Post(':id/assign-employees')
@@ -133,11 +135,7 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: AssignEmployeesDto,
   ) {
-    return this.tasksService.assignEmployeesToTask(
-      req.user.tenantName,
-      id,
-      dto,
-    );
+    return this.tasksService.assignEmployeesToTask(req.user.tenantId, id, dto);
   }
 
   @Delete(':id/employees/:employeeId')
@@ -147,7 +145,7 @@ export class TasksController {
     @Param('employeeId', ParseIntPipe) employeeId: number,
   ) {
     return this.tasksService.removeEmployeeFromTask(
-      req.user.tenantName,
+      req.user.tenantId,
       id,
       employeeId,
     );

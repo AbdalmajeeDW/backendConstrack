@@ -275,8 +275,8 @@ export class TasksService {
       await tenantConnection.destroy();
     }
   }
-  async getTaskById(tenantName: string, taskId: number) {
-    const databaseName = await this.getTenantDatabaseName(tenantName);
+  async getTaskById(tenantId: string, taskId: number) {
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
     const tenantConnection = await this.createTenantConnection(databaseName);
 
     try {
@@ -435,11 +435,10 @@ private async logTaskImageUploadActivity(
       route: 'tasks-page',
     });
 
-    console.log('✅ Image upload activity logged for employee:', employeeId);
   }
 }
-  async deleteTask(tenantName: string, taskId: number) {
-    const databaseName = await this.getTenantDatabaseName(tenantName);
+  async deleteTask(tenantId: string, taskId: number) {
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
     const tenantConnection = await this.createTenantConnection(databaseName);
 
     try {
@@ -504,11 +503,11 @@ private async logTaskImageUploadActivity(
   }
 
   async removeEmployeeFromTask(
-    tenantName: string,
+    tenantId: string,
     taskId: number,
     employeeId: number,
   ) {
-    const databaseName = await this.getTenantDatabaseName(tenantName);
+    const databaseName = await this.getTenantDatabaseNameById(tenantId);
     const tenantConnection = await this.createTenantConnection(databaseName);
 
     try {

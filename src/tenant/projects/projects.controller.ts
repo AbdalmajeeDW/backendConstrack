@@ -37,9 +37,7 @@ export class ProjectsController {
     return this.projectsService.findOne(tenantId, +id);
   }
 
-
-
-    @Patch(':id')
+  @Patch(':id')
   async update(
     @Req() req: any,
     @Param('id') id: string,

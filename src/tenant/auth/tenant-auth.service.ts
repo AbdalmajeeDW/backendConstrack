@@ -13,7 +13,7 @@ import { TenantService } from '../../superAdmin/tenant/tenant.service';
 import { TenantLoginDto } from './dto/tenant-login.dto';
 import { TenantRefreshTokenDto } from './dto/tenant-refresh-token.dto';
 import { TenantRegisterDto } from './dto/tenant-register.dto';
-import { TenantLogsService } from '../logs/logs.service'; // ✅ استيراد
+import { TenantLogsService } from '../logs/logs.service';
 
 @Injectable()
 export class TenantAuthService {
@@ -419,4 +419,23 @@ export class TenantAuthService {
       await tenantConnection.destroy();
     }
   }
+  async checkCompanyExists(tenantName: string): Promise<{ exists: boolean; status?: string; tenantId?: number }> {
+  try {
+    const tenant = await this.tenantService.findByName(tenantName);
+    
+    if (!tenant) {
+      return { exists: false };
+    }
+
+    return {
+      exists: true,
+      status: tenant.status,
+    };
+  } catch (error) {
+    if (error instanceof NotFoundException) {
+      return { exists: false };
+    }
+    throw error;
+  }
+}
 }

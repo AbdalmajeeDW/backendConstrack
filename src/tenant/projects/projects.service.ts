@@ -22,7 +22,7 @@ export class ProjectsService {
 
     return date;
   }
-  async create(tenantId: string, dto: CreateProjectDto) {
+  async create(tenantId: string, dto: CreateProjectDto) {    
     const databaseName =
       await this.tenantService.getTenantDatabaseNameById(tenantId);
     const startDate = this.parseDate(dto.start_date);
